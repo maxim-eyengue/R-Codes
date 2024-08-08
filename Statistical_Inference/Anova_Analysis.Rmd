@@ -1,0 +1,204 @@
+---
+title: "Statistical Inference"
+author: "Maximilien"
+date: "`r Sys.Date()`"
+output: 
+      pdf_document :
+        latex_engine : xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Anova Analysis
+
+## 1. Data acquisition :
+
+Let's download our dataset :
+
+
+```{r DataS}
+www = "http://www.biostatisticaumg.it/dataset/roma.csv" # url adrress of our dataset
+roma = read.csv(www, header = TRUE) # reading the dataset as a dataframe
+attach(roma) # to download the dataset
+```
+
+
+## 2. Data exploration :
+
+Let's find out the content of our dataset :
+
+### The dimension :
+
+```{r RomaDim}
+dim(roma) # to get the dimension of the dataset
+```
+
+### The different features of roma dataset :
+
+```{r AttribRoma}
+attributes(roma) # to get the attributes of the dataset roma
+```
+
+### The types of data of the columns of our dataset :
+
+```{r RomaTypes}
+str(roma) # data types
+```
+
+### A quick view of some observations :
+
+```{r firstRoma}
+head(roma) # the first six elements
+```
+
+### Then, let's give the summary statistics :
+
+```{r sumDataRoma}
+summary(roma) # to get the basic statistics
+```
+
+### Let's check if the dataset has missing values :
+
+```{r MissValues}
+colSums(is.na(roma)) # number of missing values for each feature
+```
+The dataset doesn't have any missinng value.
+
+### Some descriptive statistics using graphics :
+
+```{r Graph,  fig.width= 10, fig.height= 5}
+library(ggplot2) # as we'll use this library to plot
+par(mfrow = c(1,2))
+hist(logHE4, main = " Histogram of logHE4", xlab = "logHE4", col = 'indianred2') # for an histogram
+boxplot(AgePatient, main = "Boxplot of AgePatient", col = "yellow")
+```
+
+We can see that the distribution of logHE4 is right-skewed and unimodal. Besides that, the age of patients in our dataset is mostly between approximately 35 and 60 but there are some of approximately 10 amd 80 years old. There's no outliers for the ages in our dataset and the median is around 50.
+
+## 3. Let's use a t-test to test the null hypothesis that the mean of the variable "logHe4" is equal to 3 :
+
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The mean of the variable "logHe4" is equal to 3.
+-   Alternative Hypothesis ($H_1$) : The mean of the variable "logHe4" is not equal to 3.
+
+```{r T.testE3}
+t.test(logHE4, mu = 3) # performing the t-test
+```
+
+The p-value is less than 2.2e-16 \< \$\alpha = 0.05 \$, so we can reject the null hypothesis. As a conclusion, the mean of the variable "logHe4" is not equal to 3.
+
+
+## 4. Let's calculate the variances of the two ”Histology” groups with respect to the variable ”logHE4” simultaneously. Then, we'll test the equality of these variances :
+
+### Computation of the variances using ”tapply” :
+
+```{r VarVal}
+Variances = tapply(logHE4,Histology,var) # computing variances
+Variances
+```
+
+### Test of the equality of the obtained variances of Histology groups using the ”var.test” :
+
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The variances of Histology groups are equal.
+-   Alternative Hypothesis ($H_1$) : The variances of Histology groups are not equal.
+
+```{r var.testVariances}
+var.test(logHE4 ~ Histology) # performing the var-test
+```
+
+The p-value is less than 2.2e-16 \< \$\alpha = 0.05 \$, so we can reject the null hypothesis. As a conclusion, the variances of Histology groups are not equal.
+
+## 5. Let's test the equality between the means of the Histology groups ”benign” and ”malignant” with respect to the variable ”LogHE4” :
+
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The means of Histology groups are equal.
+-   Alternative Hypothesis ($H_1$) : The means of Histology groups are not equal.
+We'll make a two-tailed test as the alternative hypothesis is "not equal to".
+
+### With a two sample t-test :
+
+```{r t.testVarMeans}
+t.test(logHE4 ~ Histology, alternative="two.sided")
+```
+
+The p-value is 1.727e-07 \< \$\alpha = 0.05 \$, so we can reject the null hypothesis. As a conclusion, the means of the Histology groups are not equal.
+
+### With a Wilcoxon test (a non parametric test) :
+
+```{r WilTMeans}
+wilcox.test(logHE4 ~ Histology, data = roma, alternative="two.sided")
+```
+
+The p-value is 1.616e-13 \< \$\alpha = 0.05 \$, so we can reject the null hypothesis. As a conclusion, the means of the Histology groups are not equal.
+
+
+## 6. Let's perform the one way ANOVA to compare the two Histology groups with respect to the variable ”LogHE4” and then, test its assumptions :
+
+### One way ANOVA test :
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The means of Histology groups are equal.
+-   Alternative Hypothesis ($H_1$) : The means of Histology groups are not equal.
+
+```{r OneWayAnova}
+anova_result <- aov(logHE4 ~ Histology)
+summary(anova_result)
+```
+
+The p-value is less than 2e-16 \< \$\alpha = 0.05 \$, so we can reject the null hypothesis. As a conclusion, the means of the Histology groups are not equal.
+
+### Let's check if the assumptions of the ANOVA analysis are fulfilled :
+
+-   Independence : The observations in each group should be independent of each other. To verify the independence, we can perform the Chi-Square test.
+
+Our hypotheses for the Chi-Square test :
+
+--\> Null Hypothesis ($H_0$) : The observations are independent. 
+--\> Alternative Hypothesis ($H_1$) : The observations are not independent.
+
+```{r Indtest}
+chisq.test(table(Histology))
+```
+
+The p-value is less than 2.2e-16 which is smaller than $\alpha = 0.05$, so we can reject the null hypothesis. The variable are not independent.
+
+-   Normality : The residuals should be normally distributed. We can use the Shapiro-Wilk test to verify it.
+
+Our hypotheses for the Shapiro-Wilk test :
+
+--\> Null Hypothesis ($H_0$) : The variables are normally distributed. 
+--\> Alternative Hypothesis ($H_1$) : The variables are not normally distributed.
+
+We'll conduce this test at the significance level of $\alpha$ = 0.05.
+
+```{r shaptest}
+shapiro.test(resid(anova_result)) # checking the normality of the difference 
+                                  # between observed and predicted values
+```
+
+The p-value is 2.066e-11 less than $\alpha = 0.05$, so we can reject the null hypothesis. The variable are not normally distributed.
+
+-   Homogeneity of variance : The variances of the groups should be equal. We can use the bartlett.test to verify it.
+
+Our hypotheses are :
+
+--\> Null Hypothesis ($H_0$) : The variance is homogeneous.
+--\> Alternative Hypothesis ($H_1$) : The variance is not homogeneous.
+
+We'll conduce this test at the significance level of $\alpha$ = 0.05.
+
+```{r homogtest}
+bartlett.test(logHE4~Histology, data = roma)
+# leveneTest(LogHE4 ~ Histology, data = roma)
+```
+
+The p-value is less than 2.2e-16 which is less than $\alpha = 0.05$, so we can reject the null hypothesis. The variance is not homogeneous.
+
+As a conclusion, the assumptions for an ANOVA analysis are not fulfilled. THis means the ANOVA test is not a good test
+to check the equality of the means of the Histology groups ”benign” and ”malignant” with respect to the variable ”LogHE4”.

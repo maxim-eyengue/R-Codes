@@ -1,0 +1,240 @@
+---
+title: "Experimental Design"
+author: "Maximilien"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Let's take examples of data (experiments) in the medical and agriculture domains using three different designs, such as a Completely Randomized Design (CRD), Randomized Complete Blocks Design (RCBD) and Latin Square Design (LSD). For each design, we'll provide the ANOVA model and the analysis of variance table. As we've decided to work with real data coming from previous corresponding experiments, we won't have to check for assumptions (independence of errors, normality of residuals and homogeneity of variance) before applying the anova test (which will be conducted at the significance level of $\alpha$ = 0.05).
+
+
+## I - Completely Randomized Design (CRD)
+As the experimental material is homogeneous here, we can just randomly assign a treatment to each experimental unit.
+
+### a) Medical Experiment
+Three treatments were compared to test their relative efficacy (effectiveness) in treating Type 2 Diabetes in patients aged 10-17 who were being treated with metformin. The primary outcome was lack of glycemic control (or not). Lacking glycemic control means the patient still needed insulin, which is not the preferred outcome for a patient (it's a failure). Each of the 699 patients in the experiment were randomized to one of the following treatments :
+
+- (1) continued treatment with metformin (coded as met),
+- (2) formin combined with rosiglitazone (coded as rosi),
+- (3) a lifestyle-intervention program (coded as lifestyle).
+
+The data comes from the book : Zeitler P, et al. 2012. A Clinical Trial to Maintain Glycemic Control in Youth with Type 2 Diabetes. N Engl J Med., and is also available in the openintro R package.
+
+
+```{r}
+# Import libraries for data and to get nice outputs
+library(openintro) # data
+library(knitr) # output
+
+# Dataset
+CRD_diabetes <- diabetes2
+kable(head(CRD_diabetes))
+```
+
+Let's conduce an anova test to check if the treatments are the same : it there's no difference between them.
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The diabetes treatments metformin, formin combined with rosiglitazone and a lifestyle-intervention program are equal.
+-   Alternative Hypothesis ($H_1$) : These treatments are different.
+
+```{r}
+# Changing the outcome in numerical values
+CRD_diabetes$outcome <- ifelse(CRD_diabetes$outcome == "success", 1, 0)
+
+# anova test
+anova(lm(CRD_diabetes$outcome ~ CRD_diabetes$treatment))
+```
+
+The p-value is approximately 0.017 which is less than the significance level $\alpha$ = 0.05. That means we can reject the null hypothesis of equal treatments. As a conclusion, the treatments : metformin, formin combined with rosiglitazone and a lifestyle-intervention program are different.
+
+### b) Agriculture Experiment
+
+Our example data are from an experiment in plant physiology, published by Sokal and Rohlf (1995) and available online at the address : <https://vsni.co.uk/blogs/LMM-for-completely-randomized-design>. The lengths of pea sections (the dependent or response variable) grown in a tissue culture were recorded. The purpose of the experiment was to test the effects of various sugar media (the independent or explanatory variable) on mean pea section length. A balanced CRD was used with 10 replicates per treatment level. And the following picture show the results :
+
+
+```{r}
+# Show Image of data
+include_graphics("CRD_Agriculture.png", dpi = 100)
+```
+
+We then have the following dataset :
+
+```{r warning=FALSE}
+# Create dataset according to the image
+Sugar_Treatments <- factor(rep(c("Control", "Glucose","Fructose","GlucFruc",
+                                 "Sucrose"), time = 10))
+Pea_Lengths <- c(75, 57, 58, 58, 62, 67, 58, 61, 59, 66, 70, 60, 56, 58, 65, 75,
+                 59, 58, 61, 63, 65, 62, 57, 57, 64, 71, 60, 56, 56, 62, 67, 60,
+                 61, 58, 65, 67, 57, 60, 57, 65, 76, 59, 57, 57, 62, 68, 61, 58,
+                 59, 67 )
+Agri_CRD <- data.frame(Sugar_Treatments, Pea_Lengths)
+
+# First rows of Agri_CRD dataset
+kable(head(Agri_CRD))
+```
+
+We'll now conduce an anova test to check if these treatments act differently on plants.
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The plants treatments Control (no sugar), Glucose, Fructose, Glucose combined with Fructose and Sucrose are equal.
+-   Alternative Hypothesis ($H_1$) : These treatments are different.
+
+```{r}
+anova(lm(Pea_Lengths ~ Sugar_Treatments))
+```
+
+The p-value is approximately 6.737e-16 which is very less than the significance level $\alpha$ = 0.05. That means we can reject the null hypothesis of equal treatments. As a conclusion, plants treatments Control (no sugar), Glucose, Fructose, Glucose combined with Fructose and Sucrose are different.
+
+
+## II - Randomized Complete Blocks Design (RCBD)
+In this design, the experimental material is heterogeneous in one direction. We then need to create blocks so that there is heterogeneity between blocks and homogeneity within and the number of blocks is equal to the number of replication.
+
+### a) Medical Experiment
+This study presented the evaluate of 20 types of cancer (blocks) disease in Tikrit teaching hospital, in Tikrit for the year 1995. We have 5 treatments and each of them is replicated 20 times and the block size of each cancer is 5. The data is available in the article : On Randomized Complete Block Design - International Journal of Sciences: Basic and Applied Research (IJSBAR) (2020) Volume 53, No 2, p 232 available online : https://www.researchgate.net/publication/351101160_On_Randomized_Complete_Block_Design.
+
+```{r}
+# Show Image of data
+knitr::include_graphics("RCBD_Med.png", dpi = 150)
+```
+Let's recreate these data :
+
+```{r}
+# Building dataframe according to the image
+Cancer_treatments <- factor(rep(c("T1", "T2", "T3", "T4", "T5"), time = 20))
+Cancer_types <- factor(rep(c("Leukemia","Lung","Bladder","Prostate","Bone",
+                             "Brain","Stomach","Pancreas","Rectum","Kidney",
+                             "Liver","Urinary","Larynx","Thyroid gland","Colon",
+                             "Lymphoma","Small intestine","Skin","Uterus",
+                             "Breast"), each = 5))
+Obs_Reactions <- c(6, 7, 11, 14, 4, 0, 8, 12, 2, 17, 0, 0, 2, 7, 6, 0, 0, 3, 6,
+                   0, 0 , 1 , 0 , 0 , 1, 3 , 0 , 0 , 2 , 0, 0 , 0 ,0 , 0, 0, 0,
+                   0 , 2 , 0 , 4, 0 , 0 , 0 , 2 , 3, 1 , 1 , 0 , 3 , 2, 0 , 0 ,
+                   0 , 0 , 0, 0 , 0 , 1 , 3 , 0, 0 , 0 , 2 , 4 , 8 , 0 , 0 , 1,
+                   0 ,3 , 0 , 3 , 0 , 0 , 1, 0 , 0 , 0 , 0 , 1, 0 , 5 , 0 , 0 ,
+                   0 , 0 , 0 , 0 , 0 ,0 , 0 , 2 , 4 , 5 , 9 , 6 , 9 , 5 , 7 , 8)
+Cancer_Tik_95 <- data.frame(Cancer_treatments, Cancer_types, Obs_Reactions)
+
+# The 12^th first rows :
+kable(head(Cancer_Tik_95, 12))
+```
+
+Now, let's verify that the five treatments given for cancer are different.
+Let's set our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The Cancer treatments T1, T2, T3, T4, and T5 are equal.
+-   Alternative Hypothesis ($H_1$) : The treatments T1, T2, T3, T4, and T5 are different.
+
+```{r}
+# anova test
+anova(lm(Obs_Reactions ~ Cancer_treatments + Cancer_types))
+```
+
+The p-value of Cancer_treatments is approximately 0.016 which is less than the significance level $\alpha$ = 0.05. As it's significant, we can then reject the null hypothesis of equal treatments. As a conclusion, the treatments T1, T2, T3, T4 and T5 are different.
+In the same way, we can also confirm that the types of treatments are different according to the observed reactions as they are significant too.
+
+
+### b) Agriculture Experiment
+This RCBD experiment was carried out in El Batán, Mexico, by the International Center for Improvement of Maize and Wheat (CIMMYT) for testing wheat varieties (gen) regarding their ability to produce seeds (yield) (Besag and Higdon 1999). The trial was carried in a single location with three single-column (col). This variable represents the fixed effect of column (block). A total of 50 treatments (varieties) were evaluated for each of the three columns of col. The variable gen is the random effect of treatment (genotype). The variable row gives us the experimental unit according to a treatment. The block size is 50 as the number of treatments and we have three replications as the number of blocks (columns). The dataset is available from the agridat package (Wright 2023).
+
+```{r}
+# Import library for data
+library(agridat)
+
+# Load and show the first rows of Agri_CRD dataset
+Agri_RCBD <- agridat::besag.elbatan
+kable(head(Agri_RCBD))
+```
+
+Let's conduce an anova test to verify if the treatments (varieties) are equal.
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The treatments (varieties) G01, G02, ... , G50 are equal.
+-   Alternative Hypothesis ($H_1$) : The treatments (varieties) G01, G02, ... , G50 are different.
+
+```{r}
+# anova test
+anova(lm(Agri_RCBD$yield ~ Agri_RCBD$gen + Agri_RCBD$col))
+```
+
+The p-value of genotype (gen) is 0.005765 which is less than the significance level $\alpha$ = 0.05. As it's significant, we can reject the null hypothesis of equal treatments. As a conclusion, the varieties G01, G02, ... , G50 are different.
+
+## III - Latin Square Design
+
+### a) Medical Experiment
+
+In the book Armitage and Berry(1994), Armitage quotes a paper which reported an experiment that had been designed as a Latin square. The skins of rabbits' backs (considered as column bolcks) were inoculated with a diffusing factor in six separate sites (considered as row blocks). Six rabbits were therefore used and the order in which the sites were inoculated was done six different ways. The outcome measured was area of blister (cm²). The overall objective was to see whether or not the order of administration (considered as treatment) affected this outcome.
+
+```{r}
+# Show Data Image
+knitr::include_graphics("lsd_med.png", dpi = 125)
+```
+
+We then have the following dataset :
+
+```{r}
+# Creating dataset according to the inamge
+ColBlock_Rabbit <- factor(rep(c(1,2,3,4,5,6), each = 6))
+RowBlock_Position <- factor(rep(c(1,2,3,4,5,6), time = 6))
+Treatment_Order <- c(3, 4, 1, 6, 2, 5, 5, 2, 3, 1, 4, 6, 4, 6, 5, 3, 1, 2, 1, 5,
+                     6, 2, 3, 4, 6, 3, 2, 4, 5, 1, 2, 1, 4, 5, 6, 3)
+Observation <- c(7.9, 6.1, 7.5, 6.9, 6.7, 7.3, 8.7, 8.2, 8.1, 8.5, 9.9, 8.3,7.4,
+                 7.7, 6, 6.8, 7.3, 7.3, 7.4, 7.1, 6.4, 7.7, 6.4, 5.8, 7.1,
+                 8.1, 6.2, 8.5, 6.4, 6.4, 8.2, 5.9, 7.5, 8.5, 7.3, 7.7)
+Med_lsd <- data.frame(Treatment_Order, ColBlock_Rabbit, RowBlock_Position, Observation)
+
+# First rows 
+kable(head(Med_lsd))
+```
+
+Let's conduce an anova test to verify if the treatments (order of inoculation) are equal.
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The treatments (order : 1, 2, 3, 4, 5, 6) are equal.
+-   Alternative Hypothesis ($H_1$) : The treatments ((order : 1, 2, 3, 4, 5, 6) are different.
+
+```{r}
+# anova test
+anova( lm(Observation ~ Treatment_Order + ColBlock_Rabbit + RowBlock_Position) )
+```
+The p-value of Treatment_Order is 0.857887 which is greater than the significance level $\alpha$ = 0.05. We cannot reject the null hypothesis of equal treatments. As a conclusion, the treatments (order : 1, 2, 3, 4, 5, 6) are equal. That means the order of administration of the diffusing factor has no impact or influence on blistering.
+However, we can notice that inter-rabbit variation was significant.
+
+### b) Agriculture Experiment
+
+An experiment was conducted at Agricultural Research Station, Kopurgaon, Maharashtra on cotton during the year 1969-1970 using a Latin Square Design to study the effects of foliar application of urea in combination with insecticidal sprays on the cotton yield. The 6 treatments were :
+
+- 1 for T1 : Control (i. e. no N and no insecticides),
+- 2 for T2 :100kg N/ha applied as urea (half at final thinning and half at flowering as top dressing),
+- 3 for T3: 100kg N/ha applied as urea(80 kg N/ha In 4 equal split doses as spray and 20 kg N/ha at final thinning),
+- 4 for T4: 100 kg. N/ha applied as CAN (half at final thinning and half at flowering as top dressing),
+- 5 for T5 : T2 + six insecticidal sprays,
+- 6 for T6 : T4 + six insecticidal sprays.
+
+There were 6 replications, and the data of cotton in kg per plot has been recorded in the variable yield. The two blocking factors here are the variable row and col, certainly the ones indicating the zone or the quality of soil where the cotton was planted. The treatments are given by the variable trt. The dataset is available on the site : <https://drs.icar.gov.in/Analysis%20of%20data/latin_square.html>.
+
+```{r}
+# Read data from xls file
+Agri_lsd <- readxl::read_xls("lsd.xls")
+
+# First rows
+kable(head(Agri_lsd))
+```
+
+An anova test will help us to verify if the treatments are equal.
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The treatments (T1, T2, T3, T4, T5, T6) are equal.
+-   Alternative Hypothesis ($H_1$) : The treatments (T1, T2, T3, T4, T5, T6) are different.
+
+```{r}
+# anova test
+anova(lm(Agri_lsd$yield ~ Agri_lsd$trt + Agri_lsd$row + Agri_lsd$col))
+```
+
+The p-value of treatments (trt) is 6.343e-07 which is very less than the significance level $\alpha$ = 0.05. As it's significant, we can reject the null hypothesis of equal treatments. As a conclusion, the cotton treatments T1, T2, T3, T4, T5, T6 are different.
+
+

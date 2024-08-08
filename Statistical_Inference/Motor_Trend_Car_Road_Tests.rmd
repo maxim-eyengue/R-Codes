@@ -1,0 +1,278 @@
+---
+title: "Statistical Inference"
+author: "Maximilien"
+date: "`r Sys.Date()`"
+output: 
+     pdf_document :
+       latex_engine : xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Motor Trend Car Road Tests
+
+# Introduction
+
+mtcars stands for Motor Trend Car Road Tests. It's a dataset extracted from the 1974 Motor Trend US magazine. It comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models). We are going to explore it and look at some potential relationships between some of its variable especially using t-tests and the logistic regression model and after some experiments we'll make a conclusion.
+
+## (a) Data acquisition, Data exploration and logistic regression model :
+
+### Let's first download our dataset:
+
+```{r GettingCars}
+data("mtcars") # loading the dataset
+attach(mtcars) # dowloading the dataset
+```
+
+### Let's find out about its content :
+
+-   The dimension of our dataset and the types of its variables :
+
+```{r MtcarsTypes}
+str(mtcars) # data types
+```
+
+Our data set has 32 observations of 11 variables (features) and all these variables are numeric.
+
+-   The different attributes of cars data set :
+
+```{r AttribMtcars}
+attributes(mtcars) # to get the attributes of the dataset roma
+```
+
+The attributes are features of cars and we have as each observation the information about a model of car.
+
+-   A quick view of some observations :
+
+```{r FirstMtcars}
+head(mtcars) # the first six elements
+```
+
+-   Then, let's give the summary statistics :
+
+```{r SummDataMtcars}
+summary(mtcars) # to get the basic statistics
+```
+
+-   Let's check if the data set has missing values :
+
+```{r MissValuesMtcars}
+colSums(is.na(mtcars)) # number of missing values for each feature
+```
+
+The data set doesn't have any missing value.
+
+### Let's fit a logistic regression model :
+
+Our hypotheses :
+
+-   Null hypothesis : The number of cylinders(cyl), the gross horsepower(hp) and the weight(wt) are all independent of the transmission(am).
+
+-   Alternative hypothesis : There is at least one variable between cyl, hp and wt which depends on am.
+
+```{r}
+step(lm(mpg ~ ., data = mtcars), direction = "backward")
+```
+
+
+```{r logRegmodel}
+Log_Reg_Model <- glm(am ~ cyl + hp + wt, data = mtcars, family = "binomial") # Logistic regression model
+summary(Log_Reg_Model) # summary of our model
+```
+
+An interpretation of some results :
+
+-   The median residual is centered around zero (-0.01464). It tells us that our residuals were somewhat symmetrical and that our model was predicting evenly at both the high and low ends of our dataset.
+
+-   The p-values for the cyl and the hp are respectively 0.6491 and 0.0840. As they are greater than $\alpha$ = 0.05, we can say that they are independent of the transmission. As the variable cyl is the one with the highest p-value. We can say that it's the one which contributes less to this model.
+
+-   However, the p-value of the weight (wt) is 0.0276 which is less than $\alpha$ = 0.05. That means, we can reject the null hypothesis stating that the variables cyl, wt and hp are independent of am.
+
+-   We have one asterisk at the right of the p-value of the intercept and of the weight . It shows the significance of each concerned coefficient.
+
+This leads to conclude there's strong evidence to affirm that at least one of them (the) weight depends on the transmission.
+
+
+
+## (b) Let's perform t-tests between the am groups for each of the variables in the model separately :
+
+### -  For the variable cyl :
+
+Our hypotheses :
+
+-   Null Hypothesis ($H_0$) : The mean of cylinders for automatic and manual transmission is the same.
+-   Alternative Hypothesis ($H_1$) : The mean of cylinders for automatic transmission is different from the one for manual transmission.
+
+```{r}
+t.test(cyl~am) # performing a t-test
+```
+
+The p-value obtained for this test is 0.002465 which is less than our significance level $\alpha$ = 0.05. We can then reject the null hypothesis and conclude there is a difference in mean of cylinders between automatic and manual transmission.
+
+### -  For the variable hp :
+
+The hypotheses :
+
+-   Null Hypothesis ($H_0$) : The mean horsepower for automatic and manual transmission is the same.
+-   Alternative Hypothesis ($H_1$) : The mean horsepower for automatic transmission is different from the one for manual transmission.
+
+```{r}
+t.test(hp~am) # performing a t-test
+```
+
+The p-value obtained for this test is 0.221 which is greater than our significance level $\alpha$ = 0.05. We may not reject the null hypothesis and conclude there isn't any difference in mean horsepower between automatic and manual transmission.
+
+But as we can see the mean of the groups are different. Our t-test didn't perform well. Let's check at the assumptions to understand why :
+
+
+-   Independence : The observations in each group should be independent of each other. To verify the independence, we can perform the Chi-Square test.
+
+Our hypotheses for the Chi-Square test :
+
+--\> Null Hypothesis ($H_0$) : The observations are independent. 
+--\> Alternative Hypothesis ($H_1$) : The observations are not independent.
+
+```{r Indtest}
+chisq.test(table(am))
+```
+
+The p-value is 0.2888 : greater than $\alpha = 0.05$, so we cannot reject the null hypothesis. The variable are not independent.
+
+-   Normality : The residuals should be normally distributed. We can use the Shapiro-Wilk test to verify it.
+
+Our hypotheses for the Shapiro-Wilk test :
+
+--\> Null Hypothesis ($H_0$) : The variables are normally distributed. 
+--\> Alternative Hypothesis ($H_1$) : The variables are not normally distributed.
+
+We'll conduce this test at the significance level of $\alpha$ = 0.05.
+
+```{r shaptest}
+shapiro.test(hp) # checking the normality of the difference 
+                                  # between observed and predicted values
+```
+
+The p-value is 0.04881 less than $\alpha = 0.05$, so we can reject the null hypothesis. The variable are not normally distributed.
+
+-   Homogeneity of variance : The variances of the groups should be equal. We can use the bartlett.test to verify it.
+
+Our hypotheses are :
+
+--\> Null Hypothesis ($H_0$) : The variance is homogeneous.
+--\> Alternative Hypothesis ($H_1$) : The variance is not homogeneous.
+
+We'll conduce this test at the significance level of $\alpha$ = 0.05.
+
+```{r homogtest}
+bartlett.test(hp~am, data = mtcars)
+```
+
+The p-value is 0.09305 which is greater than $\alpha = 0.05$, so we cannot reject the null hypothesis. The variance is homogeneous.
+
+As a conclusion, the assumptions for a t-test are not all fulfilled. There is a problem on the normality of data. That is why the previous result was wrong.
+
+We can then perform a non parametric test to get the good result. We will do the Wilcoxon Signed Rank test :
+
+The hypotheses :
+
+-   Null Hypothesis ($H_0$) : The mean horsepower for automatic and manual transmission is the same.
+-   Alternative Hypothesis ($H_1$) : The mean horsepower for automatic transmission is different from the one for manual transmission.
+
+```{r warning=FALSE}
+wilcox.test(hp~am) # performing a wilcoxon signed rank test
+```
+
+The p-value obtained for this test is 0.0457 which is less than our significance level $\alpha$ = 0.05. We can reject the null hypothesis and conclude there is a difference in mean horsepower between automatic and manual transmission.
+
+
+### -   For the variable wt :
+
+Our hypothesis for this test :
+
+-   Null Hypothesis ($H_0$) : The mean weight for automatic and manual transmission is the same.
+-   Alternative Hypothesis ($H_1$) : The mean weight for automatic transmission is different from the one for manual transmission.
+
+
+```{r}
+t.test(wt~am) # performing a t-test
+```
+
+The p-value obtained after this test is extremely small (6.272e-06). It's thus less than our significance level $\alpha$ = 0.05. Hence, we can reject the null hypothesis and conclude that there's a difference in mean weight between the cars with automatic and manual transmission.
+
+
+## (c) Let's fit a smaller model by removing one of the variables that are contributing less than the others in the model :
+
+As mentioned early, the variable contributing the less is the number of cylinders (cyl). We can remove it of our model and then have the new following model.
+
+### Our hypotheses :
+
+-   Null hypothesis : The gross horsepower(hp) and the weight(wt) are independent of the transmission(am).
+
+-   Alternative hypothesis : There is at least one variable between hp and wt which depends on am.
+
+```{r}
+Small_mod <- glm(am ~ hp + wt, data = mtcars, family = "binomial")
+summary(Small_mod)
+```
+
+### Interpretation of results :
+
+-   The median residual is centered around zero (-0.0168). It tells us that our residuals were somewhat symmetrical and that our model was predicting evenly at both the high and low ends of our dataset.
+
+
+-   We have one asterisk at the right of the p-value of the intercept and of hp . It shows their significance. For the variable wt, we have two asterisks as it's the most important variable of this model.
+
+
+-   The p-values for hp and wt are respectively 0.04091 and 0.00843. As they are less than $\alpha$ = 0.05, we can reject the null hypothesis stating that the variables wt and hp are independent of am.
+
+
+All this leads to conclude there's strong evidence to affirm that the weight and the Gross horsepower depend on the transmission.
+
+## (d) Let R compare the two models using a $\chi^2$ test :
+
+Our hypotheses for the Chi-Square test :
+
+-   Null Hypothesis ($H_0$) : The two models are equivalent.
+-   Alternative Hypothesis ($H_1$) : The two models are not equivalent.
+
+```{r}
+anova(Log_Reg_Model, Small_mod, test = "Chisq")
+```
+
+The p.value obtained is 0.6409 which is greater than our significance level ($\alpha$ = 0.05). We cannot reject the null hypothesis. As a conclusion, these two models are equivalent.
+Hence, although the simpler model seemingly performs better (as it has the lower AIC : 16.059 vs 17.841) than the first one, the variations in performance are most likely due to random chance.
+
+## (e) Let's use the function plot on the reproduced model and interpret the obtained graphs :
+
+```{r fig.width= 10, fig.height= 7}
+par(mfrow = c(2,2))
+plot(Small_mod)
+```
+
+These 4 graphs show us some outliers as : Toyota Corona, Mazda RX4 Wag, Volvo 142E
+
+- Residuals vs Fitted : The residuals are around the residual = 0 line but we cannot clearly identify any pattern between them. That means there isn't any linear relationship between the residuals : our model has well performed.
+
+- QQ-plot : The residuals obviously follow a general straight line. Then, it seems like they are normally distributed.
+
+- Scale-Location : The residuals are following the red line as we want to see. Unfortunately, this line is not straight as expected. That means our model is not that perfect.
+
+- Residuals vs Leverage : We can see that the model would be affected if we removed some outliers as : toyota corona for example.
+
+As a conclusion, our model seems good but the lack of observations to build it has certainly affected its behavior.
+
+## (f) Let's use the estimated logistic regression equation of vehicle transmission to predict the probability of a vehicle having manual transmission if it has a 140 hp engine and weights 2400 lbs :
+
+```{r}
+predict.glm(Small_mod, data.frame(hp=140,wt=2400), type = "response")
+```
+
+According to our model, the probability for a vehicle with a gross horsepower of 140 hp and a weight of 2400 lbs to have a manual transmission is 2.220446e-16 which is almost 0. That means if we have such an observation in our dataset the value of am would certainly be 0.
+
+
+# Conclusion :
+
+After exploring our dataset, we've built a logistic regression model for the transmission in function of the number of cylinders, the gross horsepower and the weight of cars. Furthermore, we've made some t-tests to check the difference in mean of some of our variables and one of them was wrong because of the non-normality of the data. Besides that, we've built a simpler regression model taking less parameters in account and this one was even performing better. We've also seen the significance of one variable in a model can change when we remove another one. Unfortunately, he was not that different of the first one. Finally, the lack of data (as we only have 32 observations) was an obstacle to get the ideal model we were looking for.

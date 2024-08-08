@@ -1,0 +1,188 @@
+---
+title: "Statistical Inference"
+author: "Maximilien"
+date: "`r Sys.Date()`"
+output: 
+       pdf_document :
+         latex_engine : xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cars and Fuel Economy
+
+Let's download our dataset and start looking at it :
+
+```{r loadcars}
+library(MASS) # the library that contains our data
+data("Cars93") # loading our data
+?Cars93 # to find out more about the dataset
+attach(Cars93) # to download the dataset
+dim(Cars93) # to get the dimension of the dataset
+```
+
+The number of features :
+
+```{r ncolC}
+length(Cars93) # to obtain the number of columns of the dataset
+```
+
+The types of data of the columns of our dataset :
+
+```{r Type_Cars_Data}
+str(Cars93) # data types
+```
+
+A quick view of some observations :
+
+```{r firstC}
+head(Cars93) # the first six elements
+```
+
+## 1. Descriptive statistics for the variable MPG.highway :
+
+
+```{r lib_gg}
+library(ggplot2) # as we'll use this library to plot
+```
+
+### - Histogram of MPG.highway :
+
+```{r HistMPG, fig.width= 10, fig.height= 5}
+hist(MPG.highway, main = " Histogram of MPG Highway", xlab = "MPG Highway", col = 'indianred2')
+```
+
+The histogram shows that the distribution of Miles per gallons Highway is right skewed. The range of miles 25 to 30 is the bin with maximum frequency. The ranges of miles of 40 to 45 and 45 to 50 are the bins with minimum frequency.
+
+### - Density plot of MPG.highway :
+
+```{r DensMPG,fig.width= 10, fig.height= 5}
+ggplot(Cars93, aes(x=MPG.highway)) + geom_density( fill = "slategrey", color = "lightcoral") +
+  labs(title = "Density Plot of MPG Highway", x = "MPG Highway", 
+       y = "Density")
+```
+
+The density curve obtained is right skewed. It shows us only one peak between 25 and 30 miles. The distribution of Miles per gallons Highway is unimodal.
+
+### - Boxplot of MPG.highway :
+
+```{r BoxMpg, fig.width= 10, fig.height= 5}
+boxplot(MPG.highway, main = "Boxplot of MPG Highway", col = "yellow")
+```
+
+This boxplot shows that the median of Miles per gallons Highway is around 28. In 1993, most of the cars had approximately between 26 and 32 miles per gallons on the highway, but there are some with approximately 20 and 38 miles. We also have 4 outliers beyond 40 miles. We can see that our data are left-skewed.
+
+### - QQ plot of MPG.highway :
+
+```{r QQMPG, fig.width= 10, fig.height= 5}
+ggplot(Cars93, aes(sample = MPG.highway)) + stat_qq(col="cadetblue")+stat_qq_line(col = "chocolate3") +
+  labs(title = "QQ Plot of MPG Highway",  x = "Theoritical Quantiles",
+       y = "Sample Quantiles")
+```
+
+We can clearly see the mean of Miles per gallons Highway is around 28. Moreover, our data points don't follow a general line especially beyond 75% of its spread. In this part, we have a systematic departure from the straight line. As the dots form a curve, we can affirm that our data are skewed.
+
+## 2. Descriptive statistics for the transformed variable log(MPG.highway) :
+
+-   Let's first transform the MPG.highway variable :
+
+```{r logMPG}
+log_MPG_highway <- log(MPG.highway) # our transformed variable
+```
+
+-   Then we can visualize it :
+
+### - Histogram of log(MPG.highway) :
+
+```{r HistlogMPG, fig.width= 10, fig.height= 5}
+hist(log_MPG_highway, main = "Histogram of the log of MPG Highway", xlab = "log(MPG Highway)",
+     col=5, breaks = 6) #breaks=6 for the same number of bins than MPG Highway histogram
+      #  in other to make a better comparison of their shapes.
+```
+
+This histogram shows that the distribution of the log of Miles per gallons Highway is almost symmetric. The data seems normally distributed. The range 3.2 to 3.4 is the bin with maximum frequency. The ranges 2.8 to 3 and 3.8 to 4 are the bins with minimum frequency.
+
+### - Density plot of log(MPG.highway) :
+
+```{r DenlogMPG, fig.width= 10, fig.height= 4}
+ggplot(Cars93, aes(x=log_MPG_highway)) + geom_density( fill = "orange", color = "black") +
+  labs(title = "Density Plot of the log of MPG Highway", x = "log(MPG Highway)", 
+       y = "Density")
+```
+
+The density plot obtained has almost no skew. It shows us only one peak between 3.25 and 3.375. The distribution of Miles per gallons Highway is unimodal. The shape of this graph is similar as a bell : as for a normal distribution.
+
+### - Boxplot of log(MPG.highway) :
+
+```{r BoxlogMPG, fig.width= 10, fig.height= 5}
+boxplot(log_MPG_highway, main = "Boxplot of the log of MPG Highway", col = "aquamarine4")
+```
+
+This boxplot shows that the median of the log of Miles per gallons Highway is around 3.3. Most of the observations are approximately between 3.25 and 3.45, but there are some with approximately the values : 2.8 and 3.65. We also have 4 outliers beyond 3.65. It seems like the distribution of our data doesn't have any skew. It looks like a normal distribution.
+
+### - QQ plot of log(MPG.highway) :
+
+```{r QQlogMPG, fig.width= 10, fig.height= 4}
+ggplot(Cars93, aes(sample = log_MPG_highway)) + stat_qq(col="red3")+stat_qq_line(col = "blue") +
+  labs(title = "QQ Plot of the log of MPG Highway",  x = "Theoritical Quantiles",
+       y = "Sample Quantiles")
+```
+
+We can clearly see the mean of the log of Miles per gallons Highway is around 3.3. As the dots don't really form a curve, we have the impression that the data aren't skewed. Moreover, our data points follow a general straight line. Then, it seems like they are normally distributed.
+
+### As a conclusion, transforming the variable MPG.highway with the log() function helped us to make our data more normal and symetric. That means for some analyses cases, we can even decide to use this transformed variable instead of the original one, as it would give better results.
+
+## 3. Let's produce a scatter-plot to investigate the relationship between gallons per 100 miles and weight :
+
+We've assumed the column MPG.highway to be the one we are going to transform to get 
+the gallons per 100 miles mentioned in the assignment as no more precision has been given :
+
+```{r GalTrans, fig.width= 10, fig.height= 4}
+GallonsPerMiles = 100/(MPG.highway) # creating the gallons per miles set of data
+ggplot(data = Cars93, mapping=aes(x = Weight, y= GallonsPerMiles))+geom_point(
+shape = 10, col = "seagreen4") + labs(x="Weight", y = "Gallons Per 100 Miles", 
+                     title = "Scatter Plot of Gallons per 100 miles by Weight")
+```
+
+
+As shown by our scatter plot, as the Weight increases, the gallons per 100 miles tend to increase too. Thus, our data show an uphill pattern, as we are moving from the left to the right. This indicates a positive relationship between Weight and gallons per 100 miles.
+
+## 4. As seen when looking at the precedent graph, there's a positive relationship between gallons per 100 miles and weight. Let's assume it's a linear relationship and let's show it graphically using the least square line :
+
+```{r ScatLsInvest}
+ggplot(Cars93) + geom_point(aes(Weight, GallonsPerMiles), shape = 10, color ="seagreen4"
+  ) + geom_smooth(formula = y~x, aes(x = Weight, y = GallonsPerMiles), method = 'lm', se = TRUE, 
+  col='yellow4') + labs(x="Weight", y = "Gallons Per 100 Miles", 
+    title = "Scatter Plot of Gallons per 100 miles by Weight with Least square line")
+```
+
+As the majority of our data follow the obtained least square line, we can conclude that there's a linear relationship between gallons per 100 miles and weight. Let's check how precisely it works :
+
+```{r ModelLS}
+Lm_Model <- lm(GallonsPerMiles ~ Weight) # The least square model implemented by the precedent graph
+summary(Lm_Model) # to obtain more information about our model
+```
+An interpretation of some results :
+
+- The median residual is centered around zero (0.00507). It tells us that our 
+residuals were somewhat symmetrical and that our model was predicting evenly 
+at both the high and low ends of our dataset.
+
+- The obtained coefficients mean that for a car without weight, the expected
+miles per gallons highway is 9.940e-01 which is almost zero, and for each 
+increase of weight, we have an expected decrease of 8.290e-04 for the miles per 
+gallons highway.
+
+- The Std. errors 1.845e-01 and 5.898e-05 are almost zero. They tell there's 
+almost no uncertainty about the intercept and the weight coefficients of our model.
+
+- The t-value of 5.387 and 14.057 are large, indicating that our standard errors
+are small in comparison to our coefficients.
+
+- The p-values are extremely small : 5.56e-07 and less than 2e-16 (meaning that they are significant). This leads to conclude there's strong evidence that the coefficients in this model are not zero.
+
+- We have three asterisks at the right of the two p-values. Their number show the significant of each coefficient.
+
+All these information and the other ones we've not explained clearly confirm there's is a linear relationship between gallons per 100 miles and weight.
