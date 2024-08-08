@@ -1,2 +1,2 @@
 # R-Codes
-Statistical Analyses with R (Programming Language)
+Data Science with R (Programming Language)
