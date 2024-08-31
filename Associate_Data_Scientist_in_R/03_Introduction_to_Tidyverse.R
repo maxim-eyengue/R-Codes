@@ -3,7 +3,7 @@
 # including ggplot2, readr, forcats, tibble, stringr, tidyr, purr and dplyr
 
 ##### Data wrangling
-### The gapminder dataset
+### The gapminder data set
 # It tracks economic and social indicators like life expectancy and the GDP per capita of countries over time.
 install.packages("gapminder")
 
