@@ -1,4 +1,4 @@
-####### Introduction to R 
+####### Introduction to R
 
 ### Intro to Basics
 ## How it works
