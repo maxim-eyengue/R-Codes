@@ -5,7 +5,7 @@
 install.packages("tidyverse", dependencies = TRUE)
 library(tidyverse)
 # Explore and draw insights from 2015 United States Census data (`counties`)
-# Note that a county is a subregion of one of the 50 regions of the United States
+# Note that a county is a sub-region of one of the 50 regions of the United States
 
 ##### Transforming Data with dplyr
 ### Exploring data with dplyr
@@ -13,7 +13,7 @@ library(tidyverse)
 # verbs: filter, arrange, mutate and select
 
 ## Understanding data
-# Take a look at the counties dataset
+# Take a look at the counties data set
 glimpse(counties)
 
 
@@ -26,11 +26,11 @@ counties %>%
 
 ### The filter and arrange verbs
 # arrange to sort data in function of given variables with desc() for descending order
-# filter to extract obserations based on conditions
+# filter to extract observations based on conditions
 
 ## Arranging observations
 # The variables: private_work, public_work, self_employed describe whether people work for the government, for private companies, or for themselves.
-# Create the counties_selected dataset
+# Create the counties_selected data set
 counties_selected <- counties %>%
   select(state, county, population, private_work, public_work, self_employed)
 
