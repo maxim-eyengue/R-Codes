@@ -6,7 +6,5 @@ behind one of the most important discoveries in modern medicine.
 
 
 The datasets are in the data folder.
-
 The .ipynb file contains the analysis performed with R.
-
 The .jpg is an image of the Dr. Semmelweis.
