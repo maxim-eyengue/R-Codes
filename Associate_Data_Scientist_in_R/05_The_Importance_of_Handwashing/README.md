@@ -5,6 +5,8 @@ enforced it at his hospital to save hundreds of lives. Using, R, let's perform d
 behind one of the most important discoveries in modern medicine.
 
 
-The datasets are in the data folder.\\
+The datasets are in the data folder.
+
 The .ipynb file contains the analysis performed with R.
+
 The .jpg is an image of the Dr. Semmelweis.
